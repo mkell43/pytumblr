@@ -115,9 +115,9 @@ class TumblrRequest(object):
 
         :returns: the content for the body and the content-type value
         """
-        import mimetools
+        from helpers import create_boundary
         import mimetypes
-        BOUNDARY = mimetools.choose_boundary()
+        BOUNDARY = create_boundary()
         CRLF = '\r\n'
         L = []
         for (key, value) in list(fields.items()):

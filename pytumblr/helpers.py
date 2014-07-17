@@ -43,3 +43,22 @@ def validate_blogname(fn):
             args[1] += ".tumblr.com"
         return fn(*args, **kwargs)
     return add_dot_tumblr
+
+def create_boundary():
+    """
+    Creates a boundary to be used when creating multipart requests.
+
+    :returns: a unique string generated with the pid, current time,
+              and a (mostly) random float.
+    """
+
+    import os
+    import time
+    import random
+
+    try:
+        pid = repr(os.getpid())
+    except AttributeError as e:
+        pid = 1
+
+    return '%s.%.3f.%d' % (pid, time.time, random.uniform(1, 5000))
