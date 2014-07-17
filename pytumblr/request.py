@@ -2,10 +2,10 @@ import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import time
 import json
+import requests
 
 from urllib.parse import parse_qsl
-import oauth2 as oauth
-from httplib2 import RedirectLimit
+from requests_oauthlib import OAuth1Session
 
 class TumblrRequest(object):
     """
@@ -14,8 +14,10 @@ class TumblrRequest(object):
 
     def __init__(self, consumer_key, consumer_secret="", oauth_token="", oauth_secret="", host="http://api.tumblr.com"):
         self.host = host
-        self.consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
-        self.token = oauth.Token(key=oauth_token, secret=oauth_secret)
+        self.client = OAuth1Session(client_key=consumer_key,
+                                    client_secret=consumer_secret,
+                                    resource_owner_key=oauth_token,
+                                    resource_owner_secret=oauth_secret)
 
     def get(self, url, params):
         """
@@ -30,14 +32,13 @@ class TumblrRequest(object):
         if params:
             url = url + "?" + urllib.parse.urlencode(params)
 
-        client = oauth.Client(self.consumer, self.token)
+        client = self.client
         try:
-            client.follow_redirects = False
-            resp, content = client.request(url, method="GET", redirections=False)
-        except RedirectLimit as e:
-            resp, content = e.args
+            resp = client.get(url, allow_redirects=False)
+        except requests.TooManyRedirects as e:
+            resp = e.args
 
-        return self.json_parse(content)
+        return self.json_parse(resp.text)
 
     def post(self, url, params={}, files=[]):
         """
@@ -55,10 +56,10 @@ class TumblrRequest(object):
             if files:
                 return self.post_multipart(url, params, files)
             else:
-                client = oauth.Client(self.consumer, self.token)
-                resp, content = client.request(url, method="POST", body=urllib.parse.urlencode(params))
-                return self.json_parse(content)
-        except urllib.error.HTTPError as e:
+                client = self.client
+                resp = client.post(url, data=params)
+                return self.json_parse(resp.text)
+        except requests.RequestException as e:
             return self.json_parse(e.read())
 
     def json_parse(self, content):
@@ -115,7 +116,7 @@ class TumblrRequest(object):
 
         :returns: the content for the body and the content-type value
         """
-        from helpers import create_boundary
+        from .helpers import create_boundary
         import mimetypes
         BOUNDARY = create_boundary()
         CRLF = '\r\n'

@@ -516,9 +516,9 @@ class TumblrRestClient(object):
 
         :returns: a dict parsed from the JSON response
         """
-        if needs_api_key:
-            params.update({'api_key': self.request.consumer.key})
-            valid_parameters.append('api_key')
+        #if needs_api_key:
+        #    params.update({'api_key': self.request.consumer.key})
+        #    valid_parameters.append('api_key')
 
         files = []
         if 'data' in params:
